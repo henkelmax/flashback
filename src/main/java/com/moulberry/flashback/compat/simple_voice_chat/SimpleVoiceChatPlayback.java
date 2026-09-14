@@ -11,8 +11,7 @@ import de.maxhenkel.voicechat.api.Position;
 import de.maxhenkel.voicechat.api.audiochannel.ClientEntityAudioChannel;
 import de.maxhenkel.voicechat.api.audiochannel.ClientLocationalAudioChannel;
 import de.maxhenkel.voicechat.api.audiochannel.ClientStaticAudioChannel;
-import de.maxhenkel.voicechat.voice.client.ClientManager;
-import de.maxhenkel.voicechat.voice.client.ClientVoicechat;
+import de.maxhenkel.voicechat.api.internal.VoicechatClientApiExtension;
 import net.minecraft.world.phys.Vec3;
 
 import java.time.Duration;
@@ -40,21 +39,21 @@ public class SimpleVoiceChatPlayback {
             switch (sound) {
                 case FlashbackVoiceChatSound.SoundStatic soundStatic -> {
                     ClientStaticAudioChannel channel = staticAudioChannelCache.get(source,
-                        () -> SimpleVoiceChatPlugin.CLIENT_API.createStaticAudioChannel(source));
+                            () -> SimpleVoiceChatPlugin.CLIENT_API.createStaticAudioChannel(source));
                     channel.play(sound.samples());
                 }
                 case FlashbackVoiceChatSound.SoundLocational soundLocational -> {
                     Vec3 pos = soundLocational.position();
                     Position position = SimpleVoiceChatPlugin.CLIENT_API.createPosition(pos.x, pos.y, pos.z);
                     ClientLocationalAudioChannel channel = locationAudioChannelCache.get(source,
-                        () -> SimpleVoiceChatPlugin.CLIENT_API.createLocationalAudioChannel(source, position));
+                            () -> SimpleVoiceChatPlugin.CLIENT_API.createLocationalAudioChannel(source, position));
                     channel.setLocation(position);
                     channel.setDistance(soundLocational.distance());
                     channel.play(sound.samples());
                 }
                 case FlashbackVoiceChatSound.SoundEntity soundEntity -> {
                     ClientEntityAudioChannel channel = entityAudioChannelCache.get(source,
-                        () -> SimpleVoiceChatPlugin.CLIENT_API.createEntityAudioChannel(source));
+                            () -> SimpleVoiceChatPlugin.CLIENT_API.createEntityAudioChannel(source));
                     channel.setWhispering(soundEntity.whispering());
                     channel.setDistance(soundEntity.distance());
                     channel.play(sound.samples());
@@ -64,10 +63,7 @@ public class SimpleVoiceChatPlayback {
                 }
             }
 
-            ClientVoicechat client = ClientManager.getClient();
-            if (client != null) {
-                client.getTalkCache().updateLevel(sound.source(), null, whispering, sound.samples());
-            }
+            ((VoicechatClientApiExtension) SimpleVoiceChatPlugin.CLIENT_API).updateAudioLevel(sound.source(), null, whispering, sound.samples());
         } catch (Exception | NoSuchMethodError e) {
             ReplayUI.setInfoOverlay("Error while playing Simple Voice Chat audio. Ensure that both Simple Voice Chat and Flashback are up-to-date");
 
