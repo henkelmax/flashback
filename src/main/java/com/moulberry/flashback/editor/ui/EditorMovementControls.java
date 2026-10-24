@@ -86,7 +86,7 @@ public abstract sealed class EditorMovementControls permits EditorMovementContro
                 double differenceY = lastVector.y - thisVector.y;
                 double pitchDelta = Math.toDegrees(Math.asin(differenceY / 2f)) * 2;
                 pitch = Mth.wrapDegrees(pitch - (float) pitchDelta);
-                pitch = Mth.clamp(pitch, -90, 90);
+                pitch = Math.clamp(pitch, -90, 90);
 
                 // Calculate change in yaw
                 double yaw1 = Math.toDegrees(Math.atan2(lastVector.x, lastVector.z));

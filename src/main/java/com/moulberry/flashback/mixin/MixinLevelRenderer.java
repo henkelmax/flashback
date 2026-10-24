@@ -4,13 +4,10 @@ import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.renderpearl.api.GpuFormat;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
@@ -19,38 +16,28 @@ import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.moulberry.flashback.Flashback;
 import com.moulberry.flashback.combo_options.ExportProjection;
 import com.moulberry.flashback.exporting.ExportJob;
-import com.moulberry.flashback.playback.ReplayServer;
 import com.moulberry.flashback.state.EditorState;
 import com.moulberry.flashback.state.EditorStateManager;
 import com.moulberry.flashback.editor.ui.ReplayUI;
 import com.moulberry.flashback.visuals.ReplayVisuals;
 import com.moulberry.flashback.visuals.ShaderManager;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.client.Camera;
-import net.minecraft.client.CloudStatus;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
-import net.minecraft.client.renderer.state.OptionsRenderState;
+import net.minecraft.client.renderer.oit.OitStage;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
-import net.minecraft.client.renderer.state.level.ParticlesRenderState;
-import net.minecraft.world.TickRateManager;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 import org.joml.Quaternionf;
 import org.joml.Vector4f;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -60,7 +47,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
-import java.util.OptionalInt;
 
 @Mixin(value = LevelRenderer.class, priority = 1100)
 public abstract class MixinLevelRenderer {
@@ -78,13 +64,14 @@ public abstract class MixinLevelRenderer {
     private LevelRenderState levelRenderState;
 
     @Inject(method = "render", at = @At("HEAD"))
-    public void renderLevel(CallbackInfo ci, @Local(argsOnly = true) Vector4f fogColor, @Local(argsOnly = true) CameraRenderState cameraState) {
+    public void renderLevel(CallbackInfo ci, @Local(argsOnly = true) CameraRenderState cameraState) {
         ReplayUI.lastProjectionMatrix = new Matrix4f(cameraState.projectionMatrix);
         ReplayUI.lastViewQuaternion = new Quaternionf(cameraState.orientation);
 
         EditorState editorState = EditorStateManager.getCurrent();
         if (editorState != null) {
             ReplayVisuals visuals = editorState.replayVisuals;
+            Vector4f fogColor = cameraState.fogData.color;
 
             if (!visuals.renderSky) {
                 if (Flashback.isExporting() && Flashback.EXPORT_JOB.getSettings().transparent()) {
@@ -122,8 +109,8 @@ public abstract class MixinLevelRenderer {
         }
     }
 
-    @WrapOperation(method = {"executeSolid", "executeClassicTransparency", "executeOit"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Z)V"))
-    public void renderChunkSections(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass, GpuSampler sampler, GpuTextureView atlas, boolean renderWireframeTerrain, Operation<Void> original) {
+    @WrapOperation(method = {"executeSolid", "executeClassicTransparency"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderGroup(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayerGroup;Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender$ImprovedFogTextures;Z)V"))
+    public void renderChunkSections(ChunkSectionsToRender instance, ChunkSectionLayerGroup group, RenderPass renderPass, GpuSampler sampler, GpuTextureView atlas, ChunkSectionsToRender.ImprovedFogTextures improvedFogTextures, boolean renderWireframeTerrain, Operation<Void> original) {
         EditorState editorState = EditorStateManager.getCurrent();
         if (editorState != null) {
             if (!editorState.replayVisuals.renderBlocks) {
@@ -131,7 +118,14 @@ public abstract class MixinLevelRenderer {
             }
         }
 
-        original.call(instance, group, renderPass, sampler, atlas, renderWireframeTerrain);
+        original.call(instance, group, renderPass, sampler, atlas, improvedFogTextures, renderWireframeTerrain);
+    }
+
+    @WrapWithCondition(method = "executeOit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;renderLayers([Lnet/minecraft/client/renderer/chunk/ChunkSectionLayer;Lcom/mojang/renderpearl/api/textures/GpuSampler;Lcom/mojang/renderpearl/api/commands/RenderPass;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender$ImprovedFogTextures;ZLnet/minecraft/client/renderer/oit/OitStage;)V"))
+    public boolean renderOitChunkLayers(ChunkSectionsToRender instance, ChunkSectionLayer[] layers, GpuSampler sampler, RenderPass renderPass, GpuTextureView atlas, GpuTextureView lightmap,
+                                        ChunkSectionsToRender.ImprovedFogTextures improvedFogTextures, boolean renderWireframeTerrain, OitStage oitStage) {
+        EditorState editorState = EditorStateManager.getCurrent();
+        return editorState == null || editorState.replayVisuals.renderBlocks;
     }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOit(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V", shift = At.Shift.BEFORE))

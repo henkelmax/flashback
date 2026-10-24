@@ -25,6 +25,8 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ReportedException;
+import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
@@ -543,7 +545,7 @@ public class ReplayGamePacketHandler implements ClientGamePacketListener {
     @Override
     public void handleExplosion(ClientboundExplodePacket e) {
         ClientboundExplodePacket withoutKnockback = new ClientboundExplodePacket(e.center(), e.radius(), e.blockCount(),
-                Optional.empty(), e.explosionParticle(), e.explosionSound(), e.blockParticles(), e.playSound());
+                Optional.empty(), e.explosionParticle(), e.explosionSound(), e.blockParticles());
         forward(withoutKnockback);
     }
 
@@ -811,7 +813,7 @@ public class ReplayGamePacketHandler implements ClientGamePacketListener {
             Holder.Reference<Biome> plains = this.replayServer.registryAccess().lookupOrThrow(Registries.BIOME).get(Biomes.PLAINS).get();
             LevelStem levelStem = new LevelStem(commonPlayerSpawnInfo.dimensionType(), new EmptyLevelSource(plains));
             ServerLevel serverLevel = new ServerLevel(this.replayServer, this.replayServer.executor, this.replayServer.storageSource,
-                serverLevelData, dimension, levelStem, false, commonPlayerSpawnInfo.seed(), List.of(), false);
+                serverLevelData, dimension, levelStem, false, List.of(), false);
             serverLevel.noSave = true;
             ServerLevelEvents.LOAD.invoker().onLevelLoad(this.replayServer, serverLevel);
             this.replayServer.levels.put(dimension, serverLevel);
@@ -824,7 +826,6 @@ public class ReplayGamePacketHandler implements ClientGamePacketListener {
 
         ServerLevel newLevel = this.replayServer.getLevel(dimension);
         ((ServerLevelExt) newLevel).flashback$setCanSpawnEntities(false);
-        ((ServerLevelExt) newLevel).flashback$setSeedHash(commonPlayerSpawnInfo.seed());
         this.replayServer.followLocalPlayerNextTickIfWrongDimension = true;
 
         if (newLevel != oldLevel) {
@@ -1780,4 +1781,8 @@ public class ReplayGamePacketHandler implements ClientGamePacketListener {
         return false;
     }
 
+    @Override
+    public void onPacketError(Packet<?> packet, Exception cause) throws ReportedException {
+        throw PacketUtils.makeReportedException(cause, packet, this);
+    }
 }

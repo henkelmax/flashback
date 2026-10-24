@@ -847,7 +847,7 @@ public class ReplayUI {
                             int wheelY = (int) Math.signum(ReplayUI.getIO().getMouseWheel());
                             if (wheelY != 0) {
                                 final float defaultFlyingSpeed = 0.05f;
-                                float flyingSpeed = Mth.clamp(player.getAbilities().getFlyingSpeed() + (float)wheelY * defaultFlyingSpeed / 10f,
+                                float flyingSpeed = Math.clamp(player.getAbilities().getFlyingSpeed() + (float)wheelY * defaultFlyingSpeed / 10f,
                                     defaultFlyingSpeed / 10f, defaultFlyingSpeed * 10.0f);
                                 setInfoOverlay(I18n.get("flashback.flying_speed", flyingSpeed / defaultFlyingSpeed));
                                 player.getAbilities().setFlyingSpeed(flyingSpeed);

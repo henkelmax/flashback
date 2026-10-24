@@ -10,15 +10,12 @@ import imgui.moulberry90.ImGui;
 import imgui.moulberry90.ImGuiViewport;
 import imgui.moulberry90.ImVec2;
 import imgui.moulberry90.flag.ImGuiCond;
-import imgui.moulberry90.flag.ImGuiHoveredFlags;
 import imgui.moulberry90.flag.ImGuiWindowFlags;
 import imgui.moulberry90.type.ImBoolean;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -34,7 +31,7 @@ public class ExportDoneWindow {
         private final double duration;
         private final long fileSize;
         private final boolean outputIsFolder;
-        private DynamicTexture uploaded = null;
+        private TextureResources uploaded = null;
 
         public FinishedExportEntry(ExportSettings settings, Path outputLocation, boolean errorMovingToOutput, @Nullable NativeImage thumbnail, double duration, long fileSize) {
             this.settings = settings;
@@ -50,10 +47,10 @@ public class ExportDoneWindow {
             Objects.requireNonNull(this.thumbnail);
 
             if (this.uploaded == null) {
-                this.uploaded = new DynamicTexture(() -> "flashback export thumbnail", this.thumbnail);;
+                this.uploaded = TextureResources.from2dImage(() -> "flashback export thumbnail", this.thumbnail);;
             }
 
-            return ReplayUI.imguiRenderer.getTextureId(this.uploaded.getTextureView());
+            return ReplayUI.imguiRenderer.getTextureId(this.uploaded.textureView());
         }
     }
 

@@ -1,7 +1,6 @@
 package com.moulberry.flashback.playback;
 
 import com.mojang.authlib.GameProfile;
-import com.moulberry.flashback.ext.ServerLevelExt;
 import net.minecraft.network.protocol.game.CommonPlayerSpawnInfo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
@@ -12,7 +11,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.level.biome.BiomeManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -41,9 +39,9 @@ public class ReplayPlayer extends ServerPlayer {
     @Override
     public CommonPlayerSpawnInfo createCommonSpawnInfo(ServerLevel serverLevel) {
         return new CommonPlayerSpawnInfo(serverLevel.dimensionTypeRegistration(), serverLevel.dimension(),
-            ((ServerLevelExt)serverLevel).flashback$getSeedHash(), this.gameMode.getGameModeForPlayer(),
-            Optional.ofNullable(this.gameMode.getPreviousGameModeForPlayer()),
-            serverLevel.isDebug(), serverLevel.isFlat(), this.getLastDeathLocation(), this.getPortalCooldown(), serverLevel.getSeaLevel());
+                this.gameMode.getGameModeForPlayer(),
+                Optional.ofNullable(this.gameMode.getPreviousGameModeForPlayer()),
+                serverLevel.isDebug(), serverLevel.isFlat(), this.getLastDeathLocation(), this.getPortalCooldown(), serverLevel.getSeaLevel());
     }
 
     @Override

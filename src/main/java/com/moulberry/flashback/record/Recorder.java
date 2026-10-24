@@ -119,7 +119,9 @@ public class Recorder {
     private boolean hasTakenScreenshot = false;
     private NativeImage finishedScreenshot = null;
 
-    private record PacketWithPhase(Packet<?> packet, ConnectionProtocol phase){}
+    private record PacketWithPhase(Packet<?> packet, ConnectionProtocol phase) {
+    }
+
     private final Queue<PacketWithPhase> pendingPackets = new ConcurrentLinkedQueue<>();
 
     private record Position(double x, double y, double z, float yaw, float pitch, float headYRot, boolean onGround) {
@@ -129,6 +131,7 @@ public class Recorder {
             headYRot = Mth.wrapDegrees(headYRot);
         }
     }
+
     private final WeakHashMap<Entity, Position> lastPositions = new WeakHashMap<>();
 
     // Local player data
@@ -174,7 +177,8 @@ public class Recorder {
             try {
                 String bobbyWorldName = FakeChunkManagerAccessor.getCurrentWorldOrServerName(Minecraft.getInstance().getConnection());
                 this.metadata.bobbyWorldName = bobbyWorldName;
-            } catch (Throwable t) {}
+            } catch (Throwable t) {
+            }
         }
 
         if (Flashback.supportsDistantHorizons) {
@@ -237,7 +241,7 @@ public class Recorder {
         builder.append(" (");
         builder.append(this.writtenTicksInChunk);
         builder.append("/");
-        builder.append(CHUNK_LENGTH_SECONDS*20);
+        builder.append(CHUNK_LENGTH_SECONDS * 20);
         builder.append(")");
         return builder.toString();
     }
@@ -373,7 +377,7 @@ public class Recorder {
         boolean writeChunk = close;
         if (minecraft.level != null) {
             boolean finished = this.finishedConfiguration || this.finishedPausing;
-            writeChunk |= this.writtenTicksInChunk >= CHUNK_LENGTH_SECONDS*20 || finished || changedDimensions;
+            writeChunk |= this.writtenTicksInChunk >= CHUNK_LENGTH_SECONDS * 20 || finished || changedDimensions;
         }
 
         if (writeChunk) {
@@ -668,7 +672,8 @@ public class Recorder {
             return;
         }
 
-        record IdWithPosition(int id, Position position) {}
+        record IdWithPosition(int id, Position position) {
+        }
         List<IdWithPosition> changedPositions = new ArrayList<>();
 
         for (Entity entity : level.entitiesForRendering()) {
@@ -900,7 +905,8 @@ public class Recorder {
                 if (packet instanceof ClientboundSetEquipmentPacket entityEquipmentPacket && entityEquipmentPacket.getEntity() == localPlayerId) {
                     return;
                 }
-            } catch (Exception ignored) {} // getId can throw if id hasn't been assigned
+            } catch (Exception ignored) {
+            } // getId can throw if id hasn't been assigned
         }
 
         this.pendingPackets.add(new PacketWithPhase(packet, phase));
@@ -953,7 +959,8 @@ public class Recorder {
             try {
                 var tags = TagNetworkSerialization.serializeToNetwork(entry.value());
                 serializedTags.put(entry.key(), tags);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         });
 
         configurationPackets.add(new ClientboundUpdateTagsPacket(serializedTags));
@@ -962,20 +969,19 @@ public class Recorder {
         configurationPackets.add(new ClientboundResourcePackPopPacket(Optional.empty()));
         for (ServerPackManager.ServerPackData pack : minecraft.getDownloadedPackSource().manager.packs) {
             configurationPackets.add(new ClientboundResourcePackPushPacket(pack.id, pack.url.toString(), pack.hash == null ? "" : pack.hash.toString(),
-                true, Optional.empty()));
+                    true, Optional.empty()));
         }
 
         this.asyncReplaySaver.writeConfigurationPackets(this.configurationPacketCodec, configurationPackets);
         List<Packet<? super ClientGamePacketListener>> gamePackets = new ArrayList<>();
 
         // Login packet
-        long hashedSeed = level.getBiomeManager().biomeZoomSeed;
-        CommonPlayerSpawnInfo commonPlayerSpawnInfo = new CommonPlayerSpawnInfo(level.dimensionTypeRegistration(), level.dimension(), hashedSeed,
-            gameMode.getPlayerMode(), Optional.ofNullable(gameMode.getPreviousPlayerMode()), level.isDebug(), level.getLevelData().isFlat, Optional.empty(), 0,
+        CommonPlayerSpawnInfo commonPlayerSpawnInfo = new CommonPlayerSpawnInfo(level.dimensionTypeRegistration(), level.dimension(),
+                gameMode.getPlayerMode(), Optional.ofNullable(gameMode.getPreviousPlayerMode()), level.isDebug(), level.getLevelData().isFlat, Optional.empty(), 0,
                 level.getSeaLevel());
         var loginPacket = new ClientboundLoginPacket(localPlayer.getId(), level.getLevelData().isHardcore(), connection.levels(),
-            1, minecraft.options.getEffectiveRenderDistance(), level.getServerSimulationDistance(),
-            localPlayer.isReducedDebugInfo(), localPlayer.shouldShowDeathScreen(), localPlayer.getDoLimitedCrafting(), commonPlayerSpawnInfo, false, false);
+                1, minecraft.options.getEffectiveRenderDistance(), level.getServerSimulationDistance(),
+                localPlayer.isReducedDebugInfo(), localPlayer.shouldShowDeathScreen(), localPlayer.getDoLimitedCrafting(), commonPlayerSpawnInfo, false, false);
         gamePackets.add(loginPacket);
 
         // Write local player
@@ -992,7 +998,7 @@ public class Recorder {
             boolean isValidProperties = !info.getProfile().properties().isEmpty();
             if (addedEntries.add(info.getProfile().id())) {
                 infoUpdatePacket.entries.add(new ClientboundPlayerInfoUpdatePacket.Entry(info.getProfile().id(),
-                    info.getProfile(), true, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
+                        info.getProfile(), true, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
                 if (isValidProperties) {
                     addedWithValidProperties.add(info.getProfile().id());
                 }
@@ -1009,7 +1015,7 @@ public class Recorder {
             }
             if (add) {
                 infoUpdatePacket.entries.add(new ClientboundPlayerInfoUpdatePacket.Entry(info.getProfile().id(),
-                    info.getProfile(), false, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
+                        info.getProfile(), false, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
                 if (isValidProperties) {
                     addedWithValidProperties.add(info.getProfile().id());
                 }
@@ -1028,14 +1034,14 @@ public class Recorder {
                 }
                 if (add) {
                     infoUpdatePacket.entries.add(new ClientboundPlayerInfoUpdatePacket.Entry(player.getUUID(),
-                        player.getGameProfile(), false, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
+                            player.getGameProfile(), false, info.getLatency(), info.getGameMode(), info.getTabListDisplayName(), info.showHat(), info.getTabListOrder(), null));
                     if (isValidProperties) {
                         addedWithValidProperties.add(info.getProfile().id());
                     }
                 }
             } else if (addedEntries.add(player.getUUID())) {
                 infoUpdatePacket.entries.add(new ClientboundPlayerInfoUpdatePacket.Entry(player.getUUID(),
-                    player.getGameProfile(), false, 0, GameType.DEFAULT_MODE, player.getDisplayName(), true, 0, null));
+                        player.getGameProfile(), false, 0, GameType.DEFAULT_MODE, player.getDisplayName(), true, 0, null));
             }
         }
         gamePackets.add(infoUpdatePacket);
@@ -1043,8 +1049,8 @@ public class Recorder {
         // Tab list
         PlayerTabOverlay playerTabOverlay = minecraft.gui.hud.getTabList();
         gamePackets.add(new ClientboundTabListPacket(
-            playerTabOverlay.header != null ? playerTabOverlay.header : Component.empty(),
-            playerTabOverlay.footer != null ? playerTabOverlay.footer : Component.empty()
+                playerTabOverlay.header != null ? playerTabOverlay.header : Component.empty(),
+                playerTabOverlay.footer != null ? playerTabOverlay.footer : Component.empty()
         ));
 
         // Boss bar
@@ -1080,7 +1086,7 @@ public class Recorder {
         // Level info
         WorldBorder worldBorder = level.getWorldBorder();
         gamePackets.add(new ClientboundInitializeBorderPacket(worldBorder));
-        gamePackets.add(new ClientboundSetTimePacket(level.getGameTime(), ((ClientClockManagerExt)level.clockManager()).flashback$encodeClockUpdates()));
+        gamePackets.add(new ClientboundSetTimePacket(level.getGameTime(), ((ClientClockManagerExt) level.clockManager()).flashback$encodeClockUpdates()));
         gamePackets.add(new ClientboundSetDefaultSpawnPositionPacket(level.getRespawnData()));
         if (level.isRaining()) {
             gamePackets.add(new ClientboundGameEventPacket(ClientboundGameEventPacket.START_RAINING, 0.0f));
@@ -1247,7 +1253,7 @@ public class Recorder {
             levelChunkPackets.sort(Comparator.comparingInt(task -> {
                 int dx = task.x() - centerX;
                 int dz = task.z() - centerZ;
-                return dx*dx + dz*dz;
+                return dx * dx + dz * dz;
             }));
 
             gamePackets.addAll(levelChunkPackets);
@@ -1275,7 +1281,7 @@ public class Recorder {
                 levelChunkPacketTasks.sort(Comparator.comparingInt(task -> {
                     int dx = task.pos.x() - centerX;
                     int dz = task.pos.z() - centerZ;
-                    return dx*dx + dz*dz;
+                    return dx * dx + dz * dz;
                 }));
 
                 // We get the light data on this thread to avoid slowdown due to synchronization

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public class MixinGlCommandEncoder {
 
     // _glReadBuffer(0) is invalid
-    @WrapWithCondition(method = "copyTextureToBuffer(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lcom/mojang/renderpearl/api/buffers/GpuBuffer;JLjava/lang/Runnable;IIIII)V", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/backend/opengl/GlStateManager;_glReadBuffer(I)V"), require = 0)
+    @WrapWithCondition(method = "copyTextureToBuffer(Lcom/mojang/renderpearl/api/textures/GpuTexture;Lcom/mojang/renderpearl/api/buffers/GpuBuffer;JIIIII)V", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL33C;glReadBuffer(I)V"), require = 0)
     public boolean copyTextureToBuffer_glReadBuffer(int mode) {
         return mode != 0;
     }

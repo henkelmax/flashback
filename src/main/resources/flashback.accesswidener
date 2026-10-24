@@ -14,7 +14,6 @@ accessible method net/minecraft/tags/TagNetworkSerialization serializeToNetwork 
 
 accessible field net/minecraft/world/entity/LivingEntity lerpHeadSteps I
 accessible field net/minecraft/world/entity/LivingEntity lerpYHeadRot D
-accessible method net/minecraft/world/entity/Entity lerpPositionAndRotationStep (IDDDDD)V
 accessible method net/minecraft/world/entity/LivingEntity lerpHeadRotationStep (ID)V
 
 accessible field net/minecraft/client/gui/components/BossHealthOverlay events Ljava/util/Map;

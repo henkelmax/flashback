@@ -67,12 +67,15 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.core.registries.BuiltInClientRegistries;
+import net.minecraft.client.core.registries.ClientRegistries;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.common.ClientCommonPacketListener;
 import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.configuration.ClientConfigurationPacketListener;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.permissions.PermissionSet;
 import net.minecraft.util.FileUtil;
 import net.minecraft.util.Util;
@@ -169,15 +172,16 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
     private static final KeyMapping.Category category = KeyMapping.Category.register(createIdentifier("keybind"));
     public static final KeyMapping createMarker1KeyBind = KeyMappingHelper.registerKeyMapping(new KeyMapping("flashback.keybind.create_marker_1",
-        InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
+            InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
     public static final KeyMapping createMarker2KeyBind = KeyMappingHelper.registerKeyMapping(new KeyMapping("flashback.keybind.create_marker_2",
-        InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
+            InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
     public static final KeyMapping createMarker3KeyBind = KeyMappingHelper.registerKeyMapping(new KeyMapping("flashback.keybind.create_marker_3",
-        InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
+            InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
     public static final KeyMapping createMarker4KeyBind = KeyMappingHelper.registerKeyMapping(new KeyMapping("flashback.keybind.create_marker_4",
-        InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
+            InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), category));
 
-    public static final Identifier RECORDING_INFO_DEBUG_SCREEN_ID = createIdentifier("recording_info");
+    public static final ResourceKey<DebugScreenEntry> RECORDING_INFO_DEBUG_SCREEN_ID = ResourceKey.create(ClientRegistries.DEBUG_SCREEN_ENTRY, createIdentifier("recording_info"));
+    private static final DebugGroup RECORDING_INFO_DEBUG_GROUP = DebugGroup.Builder.titleless().build();
 
     public static Identifier createIdentifier(String value) {
         return Identifier.fromNamespaceAndPath("flashback", value);
@@ -243,7 +247,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
         }
 
         if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            Minecraft.getInstance().schedule(() -> Lattice.performTest(configElements));
+            //TODO Fix lattice
+            //Minecraft.getInstance().schedule(() -> Lattice.performTest(configElements));
         }
 
         Keybinds.load(config);
@@ -272,7 +277,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
         // Delete partial exports
         try {
             FileUtils.deleteDirectory(Path.of("replay_export_temp").toFile());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         this.deleteUnusedReplayStates();
 
@@ -413,16 +419,16 @@ public class Flashback implements ModInitializer, ClientModInitializer {
         });
 
         // Setup custom debug screen info
-        DebugScreenEntries.register(RECORDING_INFO_DEBUG_SCREEN_ID, new DebugScreenEntry() {
+        Registry.register(BuiltInClientRegistries.DEBUG_SCREEN_ENTRY, RECORDING_INFO_DEBUG_SCREEN_ID, new DebugScreenEntry() {
             @Override
             public void display(DebugScreenDisplayer debugScreenDisplayer, @Nullable Level level, @Nullable LevelChunk levelChunk, @Nullable LevelChunk levelChunk2) {
                 if (Flashback.RECORDER != null) {
-                    debugScreenDisplayer.addToGroup(RECORDING_INFO_DEBUG_SCREEN_ID, Flashback.RECORDER.getDebugString());
+                    debugScreenDisplayer.addToGroup(RECORDING_INFO_DEBUG_GROUP, Flashback.RECORDER.getDebugString());
                 }
             }
         });
-        Map<DebugScreenProfile, Map<Identifier, DebugScreenEntryStatus>> newProfiles = new LinkedHashMap<>();
-        for (Map.Entry<DebugScreenProfile, Map<Identifier, DebugScreenEntryStatus>> entry : DebugScreenEntries.PROFILES.entrySet()) {
+        Map<DebugScreenProfile, Map<ResourceKey<DebugScreenEntry>, DebugScreenEntryStatus>> newProfiles = new LinkedHashMap<>();
+        for (var entry : DebugScreenEntries.PROFILES.entrySet()) {
             var newMap = new LinkedHashMap<>(entry.getValue());
             newMap.put(RECORDING_INFO_DEBUG_SCREEN_ID, DebugScreenEntryStatus.IN_OVERLAY);
             newProfiles.put(entry.getKey(), Collections.unmodifiableMap(newMap));
@@ -444,25 +450,25 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             }));
             flashback.then(ClientCommands.literal("config").executes(this::openFlashbackConfig));
             flashback.then(ClientCommands.literal("mark")
-                .executes(command -> {
-                    this.addMarker(null, null, null);
-                    return 0;
-                }).then(ClientCommands.argument("color", BetterColorArgument.color()).executes(command -> {
-                    int colour = command.getArgument("color", Integer.class);
-                    this.addMarker(colour, null, null);
-                    return 0;
-                }).then(ClientCommands.argument("savePosition", BoolArgumentType.bool()).executes(command -> {
-                    int colour = command.getArgument("color", Integer.class);
-                    boolean savePosition = command.getArgument("savePosition", Boolean.class);
-                    this.addMarker(colour, savePosition, null);
-                    return 0;
-                }).then(ClientCommands.argument("description", StringArgumentType.greedyString()).executes(command -> {
-                    int colour = command.getArgument("color", Integer.class);
-                    boolean savePosition = command.getArgument("savePosition", Boolean.class);
-                    String description = command.getArgument("description", String.class);
-                    this.addMarker(colour, savePosition, description);
-                    return 0;
-                })))));
+                    .executes(command -> {
+                        this.addMarker(null, null, null);
+                        return 0;
+                    }).then(ClientCommands.argument("color", BetterColorArgument.color()).executes(command -> {
+                        int colour = command.getArgument("color", Integer.class);
+                        this.addMarker(colour, null, null);
+                        return 0;
+                    }).then(ClientCommands.argument("savePosition", BoolArgumentType.bool()).executes(command -> {
+                        int colour = command.getArgument("color", Integer.class);
+                        boolean savePosition = command.getArgument("savePosition", Boolean.class);
+                        this.addMarker(colour, savePosition, null);
+                        return 0;
+                    }).then(ClientCommands.argument("description", StringArgumentType.greedyString()).executes(command -> {
+                        int colour = command.getArgument("color", Integer.class);
+                        boolean savePosition = command.getArgument("savePosition", Boolean.class);
+                        String description = command.getArgument("description", String.class);
+                        this.addMarker(colour, savePosition, description);
+                        return 0;
+                    })))));
             dispatcher.register(flashback);
         });
 
@@ -552,7 +558,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             synchronizeTickingCanTickServer.set(true);
         });
 
-        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("flashback", "hud"), (graphics, delta) -> {
+        HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("flashback", "hud"), (graphics) -> {
             ReplayServer replayServer = Flashback.getReplayServer();
             if (replayServer == null) {
                 return;
@@ -574,7 +580,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
                     int textTop = outerPadding + innerPadding;
 
-                    graphics.fill(fillLeft, outerPadding, graphics.guiWidth() - 2, 4 + font.lineHeight-1 + 2, 0x80000000);
+                    graphics.fill(fillLeft, outerPadding, graphics.guiWidth() - 2, 4 + font.lineHeight - 1 + 2, 0x80000000);
                     graphics.text(font, dateString, dateLeft, textTop, -1, true);
                 }
             }
@@ -584,7 +590,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             if (RECORDER != null && Flashback.config.advanced.synchronizeTicking && minecraft.hasSingleplayerServer()) {
                 boolean isLevelLoaded = !(minecraft.gui.screen() instanceof LevelLoadingScreen);
                 boolean willRecord = minecraft.level != null && (minecraft.gui.overlay() == null || !minecraft.gui.overlay().isPausing()) &&
-                    !minecraft.isPaused() && !RECORDER.isPaused() && isLevelLoaded;
+                        !minecraft.isPaused() && !RECORDER.isPaused() && isLevelLoaded;
                 while (willRecord && !synchronizeTickingCanTickClient.compareAndSet(true, false)) {
                     LockSupport.parkNanos("flashback synchronized ticking: waiting for server", 100000L);
                 }
@@ -720,10 +726,12 @@ public class Flashback implements ModInitializer, ClientModInitializer {
     }
 
     public static Screen createConfigScreen(Screen oldScreen) {
-        return Lattice.createConfigScreen(configElements, () -> {
+        //TODO Fix lattice
+        return oldScreen;
+        /*return Lattice.createConfigScreen(configElements, () -> {
             config.saveToDefaultFolder();
             Minecraft.getInstance().options.save();
-        }, oldScreen);
+        }, oldScreen);*/
     }
 
     public static void openConfigScreen(Screen oldScreen) {
@@ -756,7 +764,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
     private static boolean canReplaceScreen(Screen screen) {
         return screen == null || screen instanceof PauseScreen || screen instanceof TitleScreen
-            || screen instanceof RealmsMainScreen || screen instanceof JoinMultiplayerScreen;
+                || screen instanceof RealmsMainScreen || screen instanceof JoinMultiplayerScreen;
     }
 
     private void addMarker(FlashbackConfigV1.SubcategoryMarker.SubcategoryMarkerOptions options) {
@@ -788,7 +796,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             Entity camera = Minecraft.getInstance().getCameraEntity();
             if (camera != null) {
                 position = new ReplayMarker.MarkerPosition(camera.getEyePosition().toVector3f(),
-                    camera.level().dimension().toString());
+                        camera.level().dimension().toString());
             }
         }
 
@@ -878,7 +886,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
                         if (used) {
                             continue;
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
 
                     BasicFileAttributeView attributeView = Files.getFileAttributeView(path, BasicFileAttributeView.class);
                     BasicFileAttributes basicFileAttributes = attributeView.readAttributes();
@@ -900,7 +909,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
                         replayStates.put(uuid, path);
                     }
                 }
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
 
             if (replayStates.isEmpty()) {
                 return;
@@ -942,7 +952,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
                 if (!replayUuids.contains(entry.getKey())) {
                     try {
                         Files.deleteIfExists(entry.getValue());
-                    } catch (IOException ignored) {}
+                    } catch (IOException ignored) {
+                    }
                 }
             }
         }, Util.backgroundExecutor());
@@ -1011,7 +1022,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
                 tick = (float) replayServer.getPartialReplayTick();
             }
 
-            return (long)(tick * 50L);
+            return (long) (tick * 50L);
         } else {
             return Util.getMillis();
         }
@@ -1074,7 +1085,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
         if (Flashback.getConfig().recordingControls.showRecordingToasts) {
             SystemToast.add(Minecraft.getInstance().gui.toastManager(), FlashbackSystemToasts.RECORDING_TOAST,
-                FlashbackTextComponents.FLASHBACK, Component.translatable("flashback.toast.cancelled_recording"));
+                    FlashbackTextComponents.FLASHBACK, Component.translatable("flashback.toast.cancelled_recording"));
         }
     }
 
@@ -1095,7 +1106,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             if (!Files.exists(replayDir)) {
                 try {
                     Files.createDirectories(replayDir);
-                } catch (IOException ignored) {}
+                } catch (IOException ignored) {
+                }
             }
 
             String filename;
@@ -1116,7 +1128,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
         if (Flashback.getConfig().recordingControls.showRecordingToasts) {
             SystemToast.add(Minecraft.getInstance().gui.toastManager(), FlashbackSystemToasts.RECORDING_TOAST,
-                FlashbackTextComponents.FLASHBACK, Component.translatable("flashback.toast.finished_recording"));
+                    FlashbackTextComponents.FLASHBACK, Component.translatable("flashback.toast.finished_recording"));
         }
     }
 
@@ -1221,7 +1233,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             FileUtils.deleteDirectory(replayTemp.toFile());
 
             LevelStorageSource source = new LevelStorageSource(replayTemp.resolve("saves"), replayTemp.resolve("backups"),
-                Minecraft.getInstance().directoryValidator(), Minecraft.getInstance().getFixerUpper());
+                    Minecraft.getInstance().directoryValidator(), Minecraft.getInstance().getFixerUpper());
             LevelStorageSource.LevelStorageAccess access = source.createAccess("replay");
             PackRepository packRepository = ServerPacksSource.createPackRepository(access);
 
@@ -1231,7 +1243,7 @@ public class Flashback implements ModInitializer, ClientModInitializer {
 
             WorldDataConfiguration worldDataConfiguration = new WorldDataConfiguration(new DataPackConfig(List.of(), List.of()), FeatureFlags.DEFAULT_FLAGS);
             LevelSettings levelSettings = new LevelSettings("Replay", GameType.SPECTATOR,
-                new LevelSettings.DifficultySettings(Difficulty.NORMAL, false, true), true, worldDataConfiguration);
+                    new LevelSettings.DifficultySettings(Difficulty.NORMAL, false, true), true, worldDataConfiguration);
             WorldLoader.PackConfig packConfig = new WorldLoader.PackConfig(packRepository, worldDataConfiguration, false, true);
             WorldLoader.InitConfig initConfig = new WorldLoader.InitConfig(packConfig, Commands.CommandSelection.DEDICATED, PermissionSet.ALL_PERMISSIONS);
 
@@ -1245,12 +1257,12 @@ public class Flashback implements ModInitializer, ClientModInitializer {
                 WorldDimensions.Complete complete = worldDimensions.bake(registry);
 
                 return new WorldLoader.DataLoadOutput<>(new LevelDataAndDimensions.WorldDataAndGenSettings(
-                    new PrimaryLevelData(levelSettings, complete.specialWorldProperty(), complete.lifecycle()),
-                    new WorldGenSettings(new WorldOptions(0L, false, false), worldDimensions)
+                        new PrimaryLevelData(levelSettings, complete.specialWorldProperty(), complete.lifecycle()),
+                        new WorldGenSettings(new WorldOptions(0L, false, false), worldDimensions)
                 ), complete.dimensionsRegistryAccess());
             }, WorldStem::new, Util.backgroundExecutor(), executor)).get();
 
-            ((MinecraftExt)Minecraft.getInstance()).flashback$startReplayServer(access, packRepository, worldStem, Optional.of(gameRules), new MinecraftExt.StartReplayServerInfo(replayUuid, playbackFileSystem, metadata));
+            ((MinecraftExt) Minecraft.getInstance()).flashback$startReplayServer(access, packRepository, worldStem, Optional.of(gameRules), new MinecraftExt.StartReplayServerInfo(replayUuid, playbackFileSystem, metadata));
             playbackFileSystem = null;
 
             TaskbarManager.launchTaskbarManager();
@@ -1260,7 +1272,8 @@ public class Flashback implements ModInitializer, ClientModInitializer {
             if (playbackFileSystem != null) {
                 try {
                     playbackFileSystem.close();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             isOpeningReplay = false;

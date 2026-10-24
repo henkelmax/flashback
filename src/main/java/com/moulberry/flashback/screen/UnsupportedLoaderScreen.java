@@ -44,7 +44,7 @@ public class UnsupportedLoaderScreen extends Screen {
         this.message = MultiLineLabel.create(this.font, this.messageText, this.width - 50);
         int lines = this.message.getLineCount();
         int height = lines * this.font.lineHeight;
-        int buttonY = Mth.clamp(90 + height + 12, this.height / 6 + 96, this.height - 24);
+        int buttonY = Math.min(Math.max(90 + height + 12, this.height / 6 + 96), this.height - 24);
 
         this.clearWidgets();
         if (this.countdown == 0) {
@@ -52,21 +52,22 @@ public class UnsupportedLoaderScreen extends Screen {
                 Flashback.getConfig().internal.nextUnsupportedModLoaderWarning = System.currentTimeMillis() + Duration.ofDays(7).toMillis();
                 Flashback.getConfig().delayedSaveToDefaultFolder();
                 Minecraft.getInstance().gui.setScreen(this.lastScreen);
-           }).bounds((this.width - 150) / 2, buttonY, 150, 20).build();
+            }).bounds((this.width - 150) / 2, buttonY, 150, 20).build();
             this.addRenderableWidget(button);
         } else if (this.countdown <= 10) {
-            var button = Button.builder(Component.translatable("flashback.i_understand_countdown", Component.literal(String.valueOf(this.countdown))), b -> {})
-                               .bounds((this.width - 150) / 2, buttonY, 150, 20).build();
+            var button = Button.builder(Component.translatable("flashback.i_understand_countdown", Component.literal(String.valueOf(this.countdown))), b -> {
+                    })
+                    .bounds((this.width - 150) / 2, buttonY, 150, 20).build();
             button.active = false;
             this.addRenderableWidget(button);
         }
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
-        super.extractRenderState(guiGraphics, i, j, f);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics) {
+        super.extractRenderState(guiGraphics);
         guiGraphics.centeredText(this.font, this.title, this.width / 2, 70, 0xFFFFFFFF);
-        this.message.visitLines(TextAlignment.CENTER, this.width /2, 90, this.font.lineHeight, guiGraphics.textRenderer());
+        this.message.visitLines(TextAlignment.CENTER, this.width / 2, 90, this.font.lineHeight, guiGraphics.textRenderer());
 
         if (this.countdown > 0 && System.currentTimeMillis() - this.lastInitTime > 1000) {
             this.countdown -= 1;

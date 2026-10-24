@@ -710,7 +710,7 @@ public class ExportJob {
         minecraft.runAllTasks();
         this.updateClientFreeze(frozen);
         if (!frozen) {
-            minecraft.getTextureManager().tick();
+            minecraft.getAtlasManager().tick();
         }
         minecraft.tick();
         this.updateSoundSource(minecraft);

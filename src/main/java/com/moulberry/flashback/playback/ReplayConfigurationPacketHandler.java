@@ -4,6 +4,8 @@ import com.mojang.serialization.Lifecycle;
 import com.moulberry.flashback.Flashback;
 import com.moulberry.flashback.exception.UnsupportedPacketException;
 import com.moulberry.flashback.registry.RegistryHelper;
+import net.minecraft.ReportedException;
+import net.minecraft.network.protocol.PacketUtils;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.DisconnectionDetails;
@@ -376,5 +378,10 @@ public class ReplayConfigurationPacketHandler implements ClientConfigurationPack
     @Override
     public boolean isAcceptingMessages() {
         return false;
+    }
+
+    @Override
+    public void onPacketError(Packet<?> packet, Exception cause) throws ReportedException {
+        throw PacketUtils.makeReportedException(cause, packet, this);
     }
 }

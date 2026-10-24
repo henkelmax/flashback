@@ -30,19 +30,6 @@ public abstract class MixinServerLevel implements ServerLevelExt {
     public abstract MinecraftServer getServer();
 
     @Unique
-    private long seedHash = 0;
-
-    @Override
-    public void flashback$setSeedHash(long seedHash) {
-        this.seedHash = seedHash;
-    }
-
-    @Override
-    public long flashback$getSeedHash() {
-        return this.seedHash;
-    }
-
-    @Unique
     private final LongSet validChunks = new LongOpenHashSet();
 
     @Override

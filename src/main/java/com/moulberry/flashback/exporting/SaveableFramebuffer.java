@@ -53,10 +53,11 @@ public class SaveableFramebuffer implements AutoCloseable {
 
         try {
             fixDepthDownload = true;
-            commandEncoder.copyTextureToBuffer(gpuTexture, this.pbo, 0, runnable, 0);
+            commandEncoder.copyTextureToBuffer(gpuTexture, this.pbo, 0, 0);
         } finally {
             fixDepthDownload = false;
         }
+        RenderSystem.queueFencedTask(runnable);
     }
 
     public boolean canFinishDownload() {

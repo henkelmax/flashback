@@ -1,8 +1,11 @@
 package com.moulberry.flashback.mixin.visuals;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.moulberry.flashback.state.EditorState;
 import com.moulberry.flashback.state.EditorStateManager;
 import com.moulberry.flashback.ext.OptionsExt;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import org.spongepowered.asm.mixin.Final;
@@ -36,6 +39,16 @@ public class MixinOptions implements OptionsExt {
             }
 
             cir.setReturnValue(this.cachedFovOptionInstance);
+        }
+    }
+
+    @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getCloudStatus()Lnet/minecraft/client/CloudStatus;"), require = 0)
+    public CloudStatus extractRenderState_getCloudStatus(Options instance, Operation<CloudStatus> original) {
+        EditorState editorState = EditorStateManager.getCurrent();
+        if (editorState != null && !editorState.replayVisuals.renderSky) {
+            return CloudStatus.OFF;
+        } else {
+            return original.call(instance);
         }
     }
 

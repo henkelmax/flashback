@@ -90,7 +90,7 @@ public class ReplaySelectionList extends ObjectSelectionList<ReplaySelectionEntr
     }
 
     @Override
-    public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor graphics) {
         List<PendingSelectionEntry> list = this.pollReplaysIgnoreErrors();
         if (this.currentlyDisplayedReplays != list) {
             if (list == null) {
@@ -102,7 +102,7 @@ public class ReplaySelectionList extends ObjectSelectionList<ReplaySelectionEntr
 
             this.currentlyDisplayedReplays = list;
         }
-        super.extractWidgetRenderState(graphics, mouseX, mouseY, a);
+        super.extractWidgetRenderState(graphics);
     }
 
     public void updateFilter(String filter, ReplaySorting replaySorting, boolean sortDescending) {

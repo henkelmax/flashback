@@ -3,11 +3,7 @@ package com.moulberry.flashback.mixin.playback;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.moulberry.flashback.Flashback;
-import com.moulberry.flashback.state.EditorState;
-import com.moulberry.flashback.state.EditorStateManager;
-import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Options;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.GameRenderer;
@@ -26,17 +22,7 @@ import java.util.Objects;
 public abstract class MixinGameRenderer {
     @Shadow
     @Final
-    Minecraft minecraft;
-
-    @WrapOperation(method = "extractOptions", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getCloudStatus()Lnet/minecraft/client/CloudStatus;"), require = 0)
-    public CloudStatus extractOptions_getCloudStatus(Options instance, Operation<CloudStatus> original) {
-        EditorState editorState = EditorStateManager.getCurrent();
-        if (editorState != null && !editorState.replayVisuals.renderSky) {
-            return CloudStatus.OFF;
-        } else {
-            return original.call(instance);
-        }
-    }
+    private Minecraft minecraft;
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/CommandEncoder;clearDepthTexture(Lcom/mojang/renderpearl/api/textures/GpuTexture;D)V", remap = false, ordinal = 0), cancellable = true)
     public void render_noGui(CallbackInfo ci) {

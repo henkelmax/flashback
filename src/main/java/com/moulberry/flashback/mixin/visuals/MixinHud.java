@@ -7,7 +7,6 @@ import com.moulberry.flashback.editor.ui.MouseHandledBy;
 import com.moulberry.flashback.state.EditorState;
 import com.moulberry.flashback.state.EditorStateManager;
 import com.moulberry.flashback.editor.ui.ReplayUI;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Hud;
@@ -40,7 +39,7 @@ public abstract class MixinHud {
     private boolean shouldHideElements = false;
 
     @Inject(method = "extractRenderState", at = @At("HEAD"))
-    public void extractRenderState_updateCameraGameType(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractRenderState_updateCameraGameType(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         this.shouldHideElements = false;
         this.cameraGameType = null;
         if (Flashback.isInReplay()) {
@@ -61,7 +60,7 @@ public abstract class MixinHud {
     }
 
     @Inject(method = "extractChat", at = @At("HEAD"), cancellable = true, require = 0)
-    public void extractChat(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractChat(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.shouldHideElements) {
             EditorState editorState = EditorStateManager.getCurrent();
             if (editorState != null && !editorState.replayVisuals.showChat) {
@@ -71,7 +70,7 @@ public abstract class MixinHud {
     }
 
     @Inject(method = "extractTitle", at = @At("HEAD"), cancellable = true, require = 0)
-    public void extractTitle(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractTitle(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.shouldHideElements) {
             EditorState editorState = EditorStateManager.getCurrent();
             if (editorState != null && !editorState.replayVisuals.showTitleText) {
@@ -81,7 +80,7 @@ public abstract class MixinHud {
     }
 
     @Inject(method = "extractScoreboardSidebar", at = @At("HEAD"), cancellable = true, require = 0)
-    public void extractScoreboardSidebar(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractScoreboardSidebar(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.shouldHideElements) {
             EditorState editorState = EditorStateManager.getCurrent();
             if (editorState != null && !editorState.replayVisuals.showScoreboard) {
@@ -91,7 +90,7 @@ public abstract class MixinHud {
     }
 
     @Inject(method = "extractOverlayMessage", at = @At("HEAD"), cancellable = true, require = 0)
-    public void extractOverlayMessage(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractOverlayMessage(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.shouldHideElements) {
             EditorState editorState = EditorStateManager.getCurrent();
             if (editorState != null && !editorState.replayVisuals.showActionBar) {
@@ -108,7 +107,7 @@ public abstract class MixinHud {
     }
 
     @Inject(method = "extractHotbarAndDecorations", at = @At("HEAD"), cancellable = true, require = 0)
-    public void extractHotbarAndDecorations(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    public void extractHotbarAndDecorations(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.shouldHideElements) {
             EditorState editorState = EditorStateManager.getCurrent();
             if (editorState != null && !editorState.replayVisuals.showHotbar) {

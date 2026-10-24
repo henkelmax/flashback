@@ -21,7 +21,7 @@ public class MixinBossHealthOverlay {
 
     @Shadow
     @Final
-    Map<UUID, LerpingBossEvent> events;
+    public Map<UUID, LerpingBossEvent> events;
 
     /**
      * Prevent disconnection if boss state is incorrect

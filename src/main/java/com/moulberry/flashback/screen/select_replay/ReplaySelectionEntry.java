@@ -9,6 +9,7 @@ import com.moulberry.flashback.screen.EditReplayScreen;
 import com.moulberry.flashback.screen.ReplaySummary;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -22,7 +23,6 @@ import net.minecraft.client.gui.screens.LoadingDotsText;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
@@ -69,7 +69,7 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, boolean hovered) {
             guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, SPRITES.get(true, hovered), this.getContentX() + 4, this.getContentY() + 2,
                     this.getContentWidth() - 8, this.getContentHeight() - 4);
 
@@ -93,7 +93,7 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, boolean hovered) {
             int p = (this.minecraft.gui.screen().width - this.minecraft.font.width(LOADING_LABEL)) / 2;
             int q = this.getContentY() + (this.getContentHeight() - this.minecraft.font.lineHeight) / 2;
             guiGraphics.text(this.minecraft.font, LOADING_LABEL, p, q, 0xFFFFFFFF, false);
@@ -138,7 +138,7 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, boolean hovered) {
             int x = this.getContentX();
             int y = this.getContentY();
             guiGraphics.text(this.minecraft.font, this.nameComponent, x + ICON_WIDTH + 3, y + 1, -1, false);
@@ -157,7 +157,7 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
 
             if (hovered) {
                 guiGraphics.fill(x, y, x + ICON_WIDTH, y + ICON_HEIGHT, 0xa0909090);
-                int q = mouseX - x;
+                int q = guiGraphics.mouseX() - x;
                 boolean hoveredIcon = q < 32;
 
                 Identifier iconOverlay = hoveredIcon ? JOIN_HIGHLIGHTED_SPRITE : JOIN_SPRITE;
@@ -204,7 +204,7 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
         }
 
         @Override
-        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, boolean hovered) {
             int x = this.getContentX();
             int y = this.getContentY();
 
@@ -241,11 +241,11 @@ public abstract class ReplaySelectionEntry extends ObjectSelectionList.Entry<Rep
 
             if (hovered) {
                 guiGraphics.fill(x, y, x + ICON_WIDTH, y + ICON_HEIGHT, 0xa0909090);
-                int q = mouseX - x;
+                int q = guiGraphics.mouseX() - x;
                 boolean hoveredIcon = q < 32;
 
                 if (hovered && this.summary.getHoverInfo() != null) {
-                    guiGraphics.setTooltipForNextFrame(this.minecraft.font, this.minecraft.font.split(this.summary.getHoverInfo(), 240), mouseX, mouseY);
+                    guiGraphics.setTooltipForNextFrame(this.minecraft.font, this.minecraft.font.split(this.summary.getHoverInfo(), 240), guiGraphics.mouseX(), guiGraphics.mouseY());
                 }
 
                 Identifier iconOverlay;

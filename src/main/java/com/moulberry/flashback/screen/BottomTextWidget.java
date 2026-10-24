@@ -2,7 +2,6 @@ package com.moulberry.flashback.screen;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractStringWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -23,7 +22,8 @@ public class BottomTextWidget extends AbstractWidget {
         return this;
     }
 
-    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
+    @Override
+    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics) {
         Component component = this.getMessage();
 
         int width = this.getWidth();

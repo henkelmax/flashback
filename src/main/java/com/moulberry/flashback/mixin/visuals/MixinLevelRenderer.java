@@ -8,7 +8,6 @@ import com.moulberry.flashback.Flashback;
 import com.moulberry.flashback.visuals.WorldRenderHook;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLevelRenderer {
 
     @Inject(method = "render", at = @At("RETURN"))
-    public void renderLevelLast(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean consistentDepthRequired, CallbackInfo ci) {
+    public void renderLevelLast(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState, GpuBufferSlice fogBuffer, boolean consistentDepthRequired, CallbackInfo ci) {
         if (!Flashback.isInReplay()) {
             return;
         }

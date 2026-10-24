@@ -2,20 +2,18 @@ package com.moulberry.flashback.visuals;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.IndexType;
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.StagedVertexBuffer;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
+import net.minecraft.client.renderer.pipeline.variant.LineRenderPipelineVariant;
 import net.minecraft.client.renderer.rendertype.PreparedRenderType;
-import net.minecraft.client.renderer.rendertype.RenderType;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -23,7 +21,6 @@ import org.joml.Vector4f;
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 public class FlashbackDrawBuffer implements AutoCloseable {
 
@@ -82,15 +79,16 @@ public class FlashbackDrawBuffer implements AutoCloseable {
         IndexType indexType = autoStorageIndexBuffer.type();
 
         GpuBufferSlice gpuBufferSlice = RenderSystem.getDynamicUniforms().writeTransform(
-            RenderSystem.getModelViewMatrixCopy(),
-            new Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-            new Vector3f(),
-            new Matrix4f()
+                RenderSystem.getModelViewMatrixCopy(),
+                new Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+                new Vector3f(),
+                new Matrix4f()
         );
 
         var commandEncoder = RenderSystem.getDevice().createCommandEncoder();
         try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "flashback draw", renderTarget.getColorTextureView(), Optional.empty(), renderTarget.hasDepth() ? renderTarget.getDepthTextureView() : null, OptionalDouble.empty())) {
-            renderPass.setPipeline(RenderSystem.getCompiledPipeline(RenderPipelines.LINES));
+            //TODO Check LinesParameters!
+            renderPass.setPipeline(RenderSystem.getCompiledPipeline(RenderPipelines.lines(new RenderPipelines.LinesParameters(LineRenderPipelineVariant.SOLID, null))));
 
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("DynamicTransforms", gpuBufferSlice);

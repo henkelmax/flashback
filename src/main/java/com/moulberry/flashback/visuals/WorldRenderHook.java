@@ -19,7 +19,7 @@ import com.moulberry.flashback.state.EditorStateManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.TextRenderable;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.pipeline.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.PreparedRenderType;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
@@ -40,7 +40,9 @@ import java.util.OptionalDouble;
 public class WorldRenderHook {
 
     private static final RenderType MARKER_CIRCLE_RENDER_TYPE = RenderType.create("flashback:marker_circle", RenderSetup
-        .builder(RenderPipelines.GUI_TEXTURED)
+        //TODO Check
+        //.builder(RenderPipelines.GUI_TEXTURED)
+        .nonOitBuilder(RenderPipelines.GUI_TEXTURED)
         .withTexture("Sampler0", Identifier.parse("flashback:world_marker_circle.png"))
         .createRenderSetup()
     );

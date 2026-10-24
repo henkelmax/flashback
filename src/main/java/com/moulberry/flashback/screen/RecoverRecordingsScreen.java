@@ -49,7 +49,7 @@ public class RecoverRecordingsScreen extends Screen {
         this.message = MultiLineLabel.create(this.font, this.messageText, this.width - 50);
         int lines = this.message.getLineCount();
         int height = lines * this.font.lineHeight;
-        int buttonY = Mth.clamp(90 + height + 12, this.height / 6 + 96, this.height - 24);
+        int buttonY = Math.min(Math.max(90 + height + 12, this.height / 6 + 96), this.height - 24);
 
         this.addRenderableWidget(Button.builder(Component.translatable("flashback.recover").withStyle(ChatFormatting.GREEN), b -> {
             Minecraft.getInstance().gui.setScreen(this.lastScreen);
@@ -66,8 +66,8 @@ public class RecoverRecordingsScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f) {
-        super.extractRenderState(guiGraphics, i, j, f);
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics) {
+        super.extractRenderState(guiGraphics);
         guiGraphics.centeredText(this.font, this.title, this.width / 2, 70, 0xFFFFFFFF);
 
         this.message.visitLines(TextAlignment.CENTER, this.width / 2, 90, this.font.lineHeight, guiGraphics.textRenderer());

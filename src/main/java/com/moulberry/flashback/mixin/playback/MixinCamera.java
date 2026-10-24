@@ -3,7 +3,6 @@ package com.moulberry.flashback.mixin.playback;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.moulberry.flashback.Flashback;
 import com.moulberry.flashback.combo_options.ExportProjection;
 import com.moulberry.flashback.exporting.ExportJob;
@@ -31,7 +30,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
@@ -64,14 +62,8 @@ public abstract class MixinCamera {
     protected abstract void setupOrtho(float zNear, float zFar, float width, float height, boolean invertY);
 
     @Shadow
-    private float depthFar;
-
-    @Shadow
     @Final
     private net.minecraft.client.renderer.Projection projection;
-
-    @Shadow
-    private float fov;
 
     @Shadow
     private Vec3 position;
@@ -157,30 +149,24 @@ public abstract class MixinCamera {
         original.call(instance, zNear, zFar, fov, width, height);
     }
 
-    @Inject(method = "createProjectionMatrixForCulling", at = @At("HEAD"), cancellable = true)
-    public void createProjectionMatrixForCulling(CallbackInfoReturnable<Matrix4f> cir) {
+    @WrapOperation(method = "createCullFrustum", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;", remap = false))
+    public Matrix4f createCullFrustum_perspective(Matrix4f instance, float fovy, float aspect, float zNear, float zFar, boolean zZeroToOne, Operation<Matrix4f> original) {
         ExportJob exportJob = Flashback.EXPORT_JOB;
         if (exportJob != null && exportJob.getSettings().projection() == ExportProjection.ORTHOGRAPHIC) {
-            Matrix4f projection = new Matrix4f();
+            float orthoHeight = (float)(Math.tan(fovy/2) * zFar / 4f) / exportJob.getSettings().orthographicZoom();
+            float orthoWidth = aspect * orthoHeight;
 
-            float fovForCulling = Math.max(this.fov, this.minecraft.options.fov().get().intValue());
-
-            float width = this.minecraft.getWindow().getWidth();
-            float height = this.minecraft.getWindow().getHeight();
-            float orthoHeight = (float)(Math.tan(Math.toRadians(fovForCulling/2)) * this.depthFar / 4f) / exportJob.getSettings().orthographicZoom();
-            float orthoWidth = width / height * orthoHeight;
-
-            projection.setOrtho(
+            return instance.setOrtho(
                 -orthoWidth/2,
                 orthoWidth/2,
                 -orthoHeight/2,
                 orthoHeight/2,
-                -this.depthFar,
-                this.depthFar,
-                RenderSystem.getDevice().getDeviceInfo().isZZeroToOne()
+                -zFar,
+                zFar,
+                zZeroToOne
             );
-            cir.setReturnValue(projection);
         }
+        return original.call(instance, fovy, aspect, zNear, zFar, zZeroToOne);
     }
 
 }

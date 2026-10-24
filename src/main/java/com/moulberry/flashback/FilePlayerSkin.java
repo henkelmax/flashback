@@ -2,7 +2,7 @@ package com.moulberry.flashback;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureResources;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.ClientAsset;
 import net.minecraft.resources.Identifier;
@@ -62,7 +62,7 @@ public class FilePlayerSkin {
                 model = PlayerModelType.SLIM;
             }
 
-            DynamicTexture dynamicTexture = new DynamicTexture(() -> "file player skin", nativeImage);
+            TextureResources dynamicTexture = TextureResources.from2dImage(() -> "file player skin", nativeImage);
 
             Identifier resourceLocation = Identifier.fromNamespaceAndPath("flashback", "skin_from_file/" + UUID.randomUUID());
             Minecraft.getInstance().getTextureManager().register(resourceLocation, dynamicTexture);

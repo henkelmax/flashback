@@ -25,14 +25,14 @@ public abstract class MixinServerLoginPacketListenerImpl {
 
     @Shadow
     @Final
-    MinecraftServer server;
+    private MinecraftServer server;
 
     @Shadow
-    abstract void startClientVerification(GameProfile gameProfile);
+    protected abstract void startOfflineClientVerification(GameProfile gameProfile);
 
     @Shadow
     @Nullable
-    String requestedUsername;
+    private String requestedUsername;
 
     @Inject(method = "handleHello", at = @At("HEAD"), cancellable = true)
     public void handleHello(ServerboundHelloPacket serverboundHelloPacket, CallbackInfo ci) {
@@ -40,7 +40,7 @@ public abstract class MixinServerLoginPacketListenerImpl {
             this.requestedUsername = ReplayServer.REPLAY_VIEWER_NAME;
             UUID replayViewerUUID = UUID.nameUUIDFromBytes(serverboundHelloPacket.name().getBytes(StandardCharsets.UTF_8));
             GameProfile gameProfile = new GameProfile(replayViewerUUID, ReplayServer.REPLAY_VIEWER_NAME);
-            this.startClientVerification(gameProfile);
+            this.startOfflineClientVerification(gameProfile);
             ci.cancel();
         }
     }

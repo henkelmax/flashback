@@ -20,7 +20,7 @@ public class MixinLoadingOverlay {
 
     // Make overlay disappear instantly if inside replay
     @Inject(method = "extractRenderState", at = @At("RETURN"), require = 0)
-    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int i, int j, float f, CallbackInfo ci) {
+    public void extractRenderState(GuiGraphicsExtractor graphics, CallbackInfo ci) {
         if (this.fadeOutStart != -1 && Flashback.isInReplay()) {
             this.minecraft.gui.setOverlay(null);
         }

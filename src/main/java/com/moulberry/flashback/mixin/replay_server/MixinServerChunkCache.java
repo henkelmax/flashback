@@ -15,7 +15,7 @@ public class MixinServerChunkCache {
 
     @Shadow
     @Final
-    ServerLevel level;
+    private ServerLevel level;
 
     @Inject(method = "save", at = @At("HEAD"), cancellable = true)
     public void save(boolean bl, CallbackInfo ci) {
